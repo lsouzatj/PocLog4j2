@@ -23,6 +23,9 @@ import com.ead.authUser.models.UserModel;
 import com.ead.authUser.services.UserService;
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.extern.log4j.Log4j2;
+
+@Log4j2
 @RestController
 @RequestMapping("auth")
 public class AuthenticationController {
@@ -36,11 +39,15 @@ public class AuthenticationController {
 											   @Validated(UserDTO.UserView.RegistrationPost.class)
 											   UserDTO userDTO){
 		
+		log.debug("POST registerUser userDTO {}", userDTO.toString());
+		
 		if (userService.existsUserByUserName(userDTO.getUserName())) {
+			log.warn("User name {} is exists", userDTO.getUserName());
 			return ResponseEntity.status(HttpStatus.CONFLICT).body("User name is exitst");
 		}
 		
 		if (userService.existsByEmail(userDTO.getEmail())) {
+			log.warn("E-mail {} is exists", userDTO.getEmail());
 			return ResponseEntity.status(HttpStatus.CONFLICT).body("E-mail is exitst");
 		}
 		
@@ -60,6 +67,8 @@ public class AuthenticationController {
 		userModel.add(linkTo(methodOn(UserController.class).deleteUser(userModel.getUserId())).withRel("DELETE - User"));
 		userModel.add(linkTo(methodOn(UserController.class).getAllUser(null, null)).withRel("GET - AllUser"));
 
+		log.info("User created {}", userModel);
+		
 		return ResponseEntity.status(HttpStatus.CREATED).body(userModel);
 	}
 }

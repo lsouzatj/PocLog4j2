@@ -29,6 +29,9 @@ import com.ead.authUser.services.UserService;
 import com.ead.authUser.specification.SpecificationTemplate;
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.extern.log4j.Log4j2;
+
+@Log4j2
 @RestController
 @RequestMapping("users")
 public class UserController {
@@ -44,9 +47,12 @@ public class UserController {
 										     direction = Sort.Direction.DESC) 
 										     Pageable pageable){
 		
+		log.debug("GET getAllUser");
+
 		Page<UserModel> pageUserModel = userService.findAllPageable(spec, pageable);
 		
 		if (pageUserModel.isEmpty()) {
+			log.warn("List users not found");
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("List users not found");
 		}
 		
@@ -55,18 +61,22 @@ public class UserController {
 			userModel.add(linkTo(methodOn(UserController.class).updateUser(userModel.getUserId(), null)).withRel("PUT - User"));
 			userModel.add(linkTo(methodOn(UserController.class).deleteUser(userModel.getUserId())).withRel("DELETE - User"));
 			userModel.add(linkTo(methodOn(AuthenticationController.class).registerUser(null)).withRel("POST - User"));
-
 		}
 		
+		log.info("User list successfully retrieved");
+
 		return ResponseEntity.status(HttpStatus.OK).body(pageUserModel);
 	}
 	
 	@GetMapping("/{userId}")
 	public ResponseEntity<Object> getOneUser(@PathVariable(value = "userId") UUID userId){
 		
+		log.debug("GET getOneUser userId {}", userId);
+
 		var userModel = userService.findById(userId);
 		
 		if (userModel.isEmpty()) {
+			log.warn("User not found");
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
 		}
 		
@@ -75,6 +85,8 @@ public class UserController {
 		userModel.get().add(linkTo(methodOn(AuthenticationController.class).registerUser(null)).withRel("POST - User"));
 		userModel.get().add(linkTo(methodOn(UserController.class).getAllUser(null, null)).withRel("GET - AllUsers"));
 		
+		log.info("Usur found {}", userModel);
+
 		return ResponseEntity.status(HttpStatus.OK).body(userModel);
 	}
 	
@@ -84,9 +96,12 @@ public class UserController {
 									 		 @Validated(UserDTO.UserView.UserPut.class)
 											 @RequestBody UserDTO userDTO){
 		
+		log.debug("PUT updateUser userId {}, userDTO {}", userId, userDTO);
+
 		var userModel = userService.findById(userId);
 		
 		if (userModel.isEmpty()) {
+			log.warn("User not found");
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
 		}
 		
@@ -102,15 +117,20 @@ public class UserController {
 		userModel.get().add(linkTo(methodOn(AuthenticationController.class).registerUser(null)).withRel("POST - User"));
 		userModel.get().add(linkTo(methodOn(UserController.class).getAllUser(null, null)).withRel("GET - AllUsers"));
 		
+		log.info("User successfully updated {}", userModel.get().toString());
+
 		return ResponseEntity.status(HttpStatus.OK).body(userModel);
 	}
 	
 	@DeleteMapping("/{userId}")
 	public ResponseEntity<Object> deleteUser(@PathVariable(value = "userId") UUID userId){
 		
+		log.debug("DELETE deleteUser userId {}", userId);
+
 		var userModel = userService.findById(userId);
 		
 		if (userModel.isEmpty()) {
+			log.warn("User not found");
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
 		}
 		
@@ -121,6 +141,8 @@ public class UserController {
 		userModel.get().add(linkTo(methodOn(AuthenticationController.class).registerUser(null)).withRel("POST - User"));
 		userModel.get().add(linkTo(methodOn(UserController.class).getAllUser(null, null)).withRel("GET - AllUsers"));
 		
+		log.info("User successfully deleted {}", userModel.get().toString());
+
 		return ResponseEntity.status(HttpStatus.OK).body(userModel.get());
 	}
 }
